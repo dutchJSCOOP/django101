@@ -1,0 +1,415 @@
+<html>
+  <head>
+    {% load staticfiles %}
+    <title> Welcome to Social! </title>
+    <link rel="stylesheet" href="{% static 'social/spotifyDemoCSS.css' %}"></link>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic' rel='stylesheet' type='text/css'>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+	<script src="{% static 'social/html5slider.js' %}"></script>
+ </head>
+  
+  
+  <body>
+	<script>
+		var audio;
+		var playlist;
+		var tracks;
+		var current;
+
+		
+		function initPlayer(){   //loads up the music files for the music player to play.
+			
+			current = 0;
+			audio = $('#music');
+			playlist = $('.playlistSongsFrame');
+			tracks = playlist.find(' a');
+			len = tracks.length;
+			audio[0].volume = .10;
+			playlist.find('a').click(function(e){
+				$('.playSongButton').removeClass('pauseHoverNear');
+				$('.playSongButton').addClass('playHoverNear');
+				e.preventDefault();
+				link = $(this);
+				if(link.parent().hasClass('active')){ //if the song is already loaded into the player, just pause.
+					play(link);
+				}else{
+					
+					current = link.parent().index()-1;
+					run(link, audio[0]);
+				
+				}
+				
+			});
+			
+			audio[0].addEventListener('ended',function(e){
+				current++;
+				if(current == len){
+					current = 0;
+					link = playlist.find('a')[0];
+				}else{
+					link = playlist.find('a')[current];    
+				}
+				run($(link),audio[0]);
+			});
+		}
+		
+		function playPlaylist(playlist_id){
+			$.getJSON('/json/playlist/' + playlist_id + '/', function(data){
+				showPlaylist(data);
+				playlist = $('.playlistSongsFrame');
+				firstSong = playlist.find('a')[0]
+				$(firstSong).trigger('click');
+			});
+			
+		
+		}
+		
+		
+		function next(){
+				current++;
+				if(current == len){
+					current = 0;
+					link = playlist.find('a')[current];
+				}else{
+					link = playlist.find('a')[current];    
+				}
+				run($(link),audio[0]);
+		}
+		
+		function previous(){
+				current--;
+				if(current == -1){
+					current = len;
+					link = playlist.find('a')[len];
+				}else{
+					link = playlist.find('a')[current];    
+				}
+				run($(link),audio[0]);
+		}
+		function run(link, player){
+				player.src = link.attr('href');
+				par = link.parent();
+				par.addClass('active').addClass('highLighted').siblings().removeClass('active').removeClass('highLighted');
+				audio[0].load();
+				play(link);
+		}
+		
+		
+		$(document).on("mouseenter", ".songBar", function(){
+			$(this).css("background-color", "#262626");
+			$(this).find(" .playSongButton").css('visibility','visible');
+		}).on("mouseleave", ".songBar", function(){
+			$(this).css("background-color", "");
+			$(this).find(" .playSongButton").css('visibility','hidden');
+		});
+		
+		$(document).on("mouseenter", ".playSongButton", function(){
+				if($(this).parent().hasClass('active')){
+					//$(this).css("background-image", "url('/media/pauseHoverOn.png')");
+				}else{
+					//$(this).css("background-image", "url('/media/playHoverOn.png')");
+				}
+				
+		}).on("mouseleave", ".playSongButton", function(){
+			if($(this).parent().hasClass('active')){
+					//$(this).css("background-image", "url('/media/pauseHoverNear.png')");
+				}else{
+					//$(this).css("background-image", "url('/media/playHoverNear.png')");
+				}
+		});
+		
+		function getPlaylist(playlist_id){
+			
+			$.getJSON('/json/playlist/' + playlist_id + '/', function(data){
+				showPlaylist(data);
+			});
+			
+		}
+		
+		function showPlaylist(playlist){
+			$(".playlistSongsFrame").empty();
+			
+			
+			$(".playlistSongsFrame").append("<div class='playListFrameHeaderContainer>'<img id='playListCoverLarge'style='background-image: url("+ playlist.coverUrl + ");' /><span style='margin-left: 210px;'> PLAYLIST </span> <div style='margin-left: 210px;' class='playlistFrameTitle' >" + playlist.name+ "</div> </div>"+
+											"<div id='playlistTableTitle'> <span id='songTag'>Song </span><span id='artistTag'>Artist</span><span id='albumTag'>Album</span>"
+						
+						
+			);
+			
+			playlist.songs.forEach(function(song){
+				let node = "<div class='songBar' id='" + playlist.id + "'>" + 
+						"<a class='playSongButton playHoverNear' href=' "+ song.url + " '></a>" +
+						"<div class='songName' ><span class='songAtrributes'>" + song.name + "</span></div>" +
+						"<div class='songArtist'><span class='songAtrributes'>" + song.artist.name + "</span></div>" +
+						"<div class='songAlbum'><span class='songAtrributes'>" + song.album.name + "</span></div>" +
+					"</div>";
+				$(".playlistSongsFrame").append(node);
+			});
+			initPlayer();
+		}
+		
+		function showPlayer(){
+			var player = $('#audioplayer');
+			if(player.hasClass('notHidden')){
+				//pass
+			}else{
+				player.animate({bottom: "0px"}, 300);
+				player.addClass('notHidden');
+			}
+			
+		
+		}
+		
+		
+	</script>
+	
+	<script> // playlistBrowserAnimations
+		
+		
+		
+		
+		$(document.body).on('mouseenter','.playlistLinkImage',function(){
+			$(this).find( ".playlistLinkImageOverlay" ).show();
+		}).on('mouseleave','.playlistLinkImage', function(){
+		$(this).find( ".playlistLinkImageOverlay" ).hide();
+		});
+		
+		$(document.body).on('mouseenter','.playlistLinkImageOverlay >  img',function(){
+			$(this).attr("src",'/media/playHoverOn.png');
+		}).on('mouseleave','.playlistLinkImageOverlay >  img',function(){
+			$(this).attr("src",'/media/playHoverNear.png');
+		});
+		
+		
+		
+		$(document.body).on('click','#plBrowseLeft',function(){
+			var $leftBorderOffset = $(".handle").offset().left;
+			var $leftBorderWindowOffset = $(".dragdealer").offset().left;
+			
+			if($leftBorderOffset + 10 >= $leftBorderWindowOffset){
+			//pass
+			}else{
+				$('.handle').animate({marginLeft: '+=1015'}, 500);
+			}	
+		});
+		$(document.body).on('click','#plBrowseRight',function(){
+			var $rightBorderOffset = $(".handle").offset().left + $(".handle").outerWidth();
+			var $rightBorderWindowOffset = $(".dragdealer").offset().left + $(".dragdealer").outerWidth();
+			if($rightBorderOffset-10 <= $rightBorderWindowOffset){
+				var $animateDistance = 0;
+			
+			}else{
+				var $animateDistance = 5*203;
+			}
+			$('.handle').animate({marginLeft: '-='+$animateDistance}, 500);
+		
+		});
+		 
+	
+	</script>
+	
+    <div class="container">
+	
+	
+		
+		
+		<div class='sideMenu'>
+		
+		</div>
+		
+		<div class='contentContainerOuter'>
+			
+			<div class='contentContainerInner'>
+			
+			
+				<div class='header'>
+					<h1> My Playlists</h1>
+				</div>
+				
+				<div id="playlistBrowser">
+					<div class='browseButtonContainer'>
+						<img id='plBrowseLeft' src="{% static 'social/arrowLeftGray.png' %}"/>
+						<img id='plBrowseRight' src="{% static 'social/arrowRightWhite.png' %}"/>
+					</div>
+					<div class="dragdealer" id='image-carousel'>
+						<div class="playlistLinkContainer handle" >
+						
+							{% for playlist in userPlaylists %}
+							<div   class="playlistLinkTile slide " id = "{{playlist.id}}">
+								
+								
+								<div width="180" height="180" class="playlistLinkImage" style="background-image: url( {{playlist.cover.url}} )">
+								<div width="180" height="180" class="playlistLinkImageOverlay"  ><img onclick="playPlaylist({{playlist.id}})"height='80px' width='80px' src="/media/playHoverNear.png"/></div></div> <!-- style="background-image: url( /media/hoverPlay.png )-->
+								<div class="playlistLinkTileName"> <a onclick="getPlaylist({{playlist.id}})">{{playlist.name}}</a></div>
+								<div class="playlistLinkTileOwner"> van {{playlist.owner.username}}</div>
+								
+							</div>
+						
+							{% endfor %}
+						</div>
+			
+					</div>
+				</div>
+			
+				
+				<div class="playlistSongsFrame">
+				
+					<!-- django code starts here -->
+				</div>
+			
+			</div>
+			<!--
+			<audio id='audio' tabindex="0" controls="" type="audio/mpeg">
+			<source type="audio/mp3" src="http://www.archive.org/download/bolero_69/Bolero.mp3">
+			Sorry, your browser does not support HTML5 audio.
+			</audio>
+			
+			
+			<!--"background-image:url({% static 'social/tiger.JPG' %})" -->
+			 
+			
+			
+			
+			
+		
+		
+    </div>
+	
+	<audio tabindex="0" preload="auto"id="music" preload="true" type="audio/mpeg">
+			<source type="audio/mp3" src="http://www.alexkatz.me/codepen/music/interlude.mp3">
+			Sorry, your browser does not support HTML5 audio.
+			</audio>
+			<div id="audioplayer">
+				<button id="prevButton" class="play" onclick="previous()"></button>
+				<button id="pButton" class="play" onclick="play($('.playlistSongsFrame').find('.active').find('a'))"></button>
+				<button id="nextButton" class="play" onclick="next()"></button>
+				<span class='currentTimeIndicator'>s</span>
+				<div id="timeline">    
+					<div id="playhead"></div>
+				</div>
+				<span class='totalTimeIndicator'>s</span>
+			</div>
+
+		
+		<script> // player script
+				
+				
+					var music = document.getElementById('music'); // id for audio element
+					var duration; // Duration of audio clip
+					var pButton = document.getElementById('pButton'); // play button
+
+					var playhead = document.getElementById('playhead'); // playhead
+
+					var timeline = document.getElementById('timeline'); // timeline
+					// timeline width adjusted for playhead
+					var timelineWidth = timeline.offsetWidth - playhead.offsetWidth;
+
+					// timeupdate event listener
+					music.addEventListener("timeupdate", timeUpdate, false);
+
+					//Makes timeline clickable
+					timeline.addEventListener("click", function (event) {
+						moveplayhead(event);
+						music.currentTime = duration * clickPercent(event);
+					}, false);
+
+					// returns click as decimal (.77) of the total timelineWidth
+					function clickPercent(e) {
+						return (e.pageX - timeline.offsetLeft) / timelineWidth;
+					}
+
+					// Makes playhead draggable 
+					playhead.addEventListener('mousedown', mouseDown, false);
+					window.addEventListener('mouseup', mouseUp, false);
+
+					// Boolean value so that mouse is moved on mouseUp only when the playhead is released 
+					var onplayhead = false;
+					// mouseDown EventListener
+					function mouseDown() {
+						onplayhead = true;
+						window.addEventListener('mousemove', moveplayhead, true);
+						music.removeEventListener('timeupdate', timeUpdate, false);
+					}
+					// mouseUp EventListener
+					// getting input from all mouse clicks
+					function mouseUp(e) {
+						if (onplayhead == true) {
+							moveplayhead(e);
+							window.removeEventListener('mousemove', moveplayhead, true);
+							// change current time
+							music.currentTime = duration * clickPercent(e);
+							music.addEventListener('timeupdate', timeUpdate, false);
+						}
+						onplayhead = false;
+					}
+					// mousemove EventListener
+					// Moves playhead as user drags
+					function moveplayhead(e) {
+						var newMargLeft = e.pageX - timeline.offsetLeft;
+						if (newMargLeft >= 0 && newMargLeft <= timelineWidth) {
+							playhead.style.marginLeft = newMargLeft + "px";
+						}
+						if (newMargLeft < 0) {
+							playhead.style.marginLeft = "0px";
+						}
+						if (newMargLeft > timelineWidth) {
+							playhead.style.marginLeft = timelineWidth + "px";
+						}
+					}
+					//(m < 10 ? '0'+m : m)
+					// timeUpdate 
+					// Synchronizes playhead position with current point in audio 
+					function timeUpdate() {
+						var playPercent = timelineWidth * (music.currentTime / duration);
+						playhead.style.marginLeft = playPercent + "px";
+						var currentSeconds = music.currentTime;
+						var currentMinutes = (currentSeconds/60).toFixed(0);
+						var currentSecondsRemaining = (currentSeconds%60).toFixed(0);
+						var totalMinutes = (duration/60).toFixed(0);
+						var totalSeconds = (duration%60).toFixed(0);
+						$('.currentTimeIndicator').html( (currentMinutes < 10 ? '0' + currentMinutes : currentMinutes) + ':'+(currentSecondsRemaining < 10 ? '0' + currentSecondsRemaining : currentSecondsRemaining) );
+						$('.totalTimeIndicator').html((totalMinutes < 10 ? '0' + totalMinutes : totalMinutes) + ':'+(totalSeconds < 10 ? '0' + totalSeconds : totalSeconds) );
+						if (music.currentTime == duration) {
+							pButton.className = "";
+							pButton.className = "play";
+						}
+					}
+
+					//Play and Pause
+					function play(songBarIcon) {
+						showPlayer();
+						// start music
+						if (music.paused) {
+							music.play();
+							// remove play, add pause
+							songBarIcon.removeClass('playHoverNear');
+							
+							songBarIcon.addClass('pauseHoverNear');
+							pButton.className = "";
+							pButton.className = "pause";
+						} else { // pause music
+							music.pause();
+							// remove pause, add play
+							songBarIcon.removeClass('pauseHoverNear');
+							songBarIcon.addClass('playHoverNear');
+							pButton.className = "";
+							pButton.className = "play";
+						}
+					}
+
+					// Gets audio file duration
+					music.addEventListener("canplaythrough", function () {
+						duration = music.duration;  
+					}, false);
+
+			
+
+
+				
+				
+				
+			</script>
+	
+  </body>
+</html>

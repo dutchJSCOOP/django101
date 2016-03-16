@@ -1,0 +1,48 @@
+<html>
+  <head>
+    {% load staticfiles %}
+  
+    <link rel="stylesheet" href="{% static 'social/spotifyDemoCSS.css' %}"></link>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic' rel='stylesheet' type='text/css'>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+ </head>
+  
+  
+  <body>
+  
+  
+    <div class="container">
+	
+	
+		
+		
+		
+			
+			<div class='contentContainerInner'>
+			
+			
+		
+				<div class="playlistContainer">
+					{% for song in playlist.songs.all %}
+					<div class="songBar" id = "{{playlist.id}}" >
+						<div class="songName" >{{song.name}}</div>
+						<div class="songArtist"> {{song.artist.name}}</div>
+						<div class="songAlbum">{{song.album.name}}</div>
+						<div class="songDuration"> {{song.duration}}</div>
+						<audio src='{{song.audioFile.url}}' controls></audio>
+					</div>
+					
+					{% endfor %}
+				</div>
+			
+				
+			
+			</div>
+			
+		
+		
+		
+		
+    </div>
+  </body>
+</html>
