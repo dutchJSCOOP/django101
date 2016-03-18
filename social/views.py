@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import login_required
+
+
 import json
 
 from social.models import Post
@@ -30,33 +32,49 @@ def social_login(request):
 @login_required
 def stream(request):
 	if request.method == 'GET':
-		userPlaylists = Playlist.objects.filter(owner=request.user)
+		userPlaylists = Playlist.objects.filter(owner=request.user).order_by('-timeAdded')
 		user = UserProfile.objects.filter(user=request.user)
-		print("bla")
+		songResults = Song.objects.all()
 	elif request.method == 'POST':
 		check = _check_post_request(request, ['search_terms'])
 		if check[0]:
+			user = UserProfile.objects.filter(user=request.user)
+			userPlaylists = Playlist.objects.filter(owner=request.user).order_by('-timeAdded')
 			search_term = request.POST['search_terms']
-			playlists = Playlist.objects.filter(text__icontains=search_term, user=request.user)
-			songs = Song.objects.filter(text__icontains=search_term)
+			songResults = Song.objects.filter(name__icontains=search_term) | Song.objects.filter(artist__name__icontains=search_term) | Song.objects.filter(album__name__icontains=search_term)
 		else:
 			return HttpResponseBadRequest(check[1])
-	return render(request, 'social/stream.html', {'userPlaylists': userPlaylists, 'user':user})
+	return render(request, 'social/stream.html', {'userPlaylists': userPlaylists, 'user':user, 'songResults': songResults})
 
-
+@login_required
+def home(request):
+    if request.method == 'GET':
+        posts = Post.objects.all()
+    elif request.method == 'POST':
+        check = _check_post_request(request, ['search_terms'])
+        if check[0]:
+            search_term = request.POST['search_terms']
+            posts = Post.objects.filter(text__icontains=search_term)
+        else:
+            return HttpResponseBadRequest(check[1])
+    posts = posts.order_by('-date_time')
+    return render(request, 'social/home.html', {'posts': posts})
 	
 @login_required
 def add_song_to_playlist(request):
+	print('hi')
+	playlistID = request.POST['playlistID']
+	playlist = Playlist.objects.get(pk=playlistID)
+	songID = request.POST['songID']
 	
-	check = _check_post_request(request, ['text'])
-	if check[0]:
-		new_song = Song()
-		new_song.name = request.POST['text']
-		new_song.artist = request.username
-		new_song.save()
-		return HttpResponseRedirect(reverse('social:stream'))
-	else:
-		return HttpResponseBadRequest(check[1]);	
+	print(songID)
+	print(playlist.id)
+	song = Song.objects.get(pk=songID)
+	print(song.name)
+	print(playlist.name)
+	playlist.songs.add(song)
+	return HttpResponseRedirect(reverse('social:stream'))
+	
 
 @login_required		
 def add_playlist(request):
@@ -71,18 +89,11 @@ def add_playlist(request):
 		return HttpResponseBadRequest(check[1]);
 	
 @login_required
-def home(request):
-    if request.method == 'GET':
-        posts = Post.objects.all()
-    elif request.method == 'POST':
-        check = _check_post_request(request, ['search_terms'])
-        if check[0]:
-            search_term = request.POST['search_terms']
-            posts = Post.objects.filter(text__icontains=search_term)
-        else:
-            return HttpResponseBadRequest(check[1])
-    posts = posts.order_by('-date_time')
-    return render(request, 'social/home.html', {'posts': posts})
+def delete_playlist(request):
+	playlistID = request.POST['playlist_id']
+	playlist = Playlist.objects.get(pk=playlistID)
+	playlist.delete()
+	return HttpResponseRedirect(reverse('social:stream'))
 
 @login_required
 def add_post(request):
@@ -97,8 +108,25 @@ def add_post(request):
 		new_post.save()
 		return HttpResponseRedirect(reverse('social:home'))
 	else:
-		return HttpResponseBadRequest(check[1]);
+		return HttpResponseBadRequest(check[1])
 
+		
+@login_required
+def add_playlist(request):
+	
+	check = _check_post_request(request, ['playlistName'])		
+	if check[0]:
+		new_playlist = Playlist()
+		new_playlist.name = request.POST['playlistName']
+		new_playlist.owner = request.user
+		if 'cover' in request.FILES and request.FILES['cover'] is not None:
+			new_playlist.cover = request.FILES['cover']
+		new_playlist.save()
+		return HttpResponseRedirect(reverse('social:stream'))
+	else:
+		return HttpResponseBadRequest(check[1])
+		
+		
 @login_required		
 def add_comment(request):
 	check = _check_post_request(request, ['comment'])
@@ -114,7 +142,7 @@ def add_comment(request):
 		new_comment.save()
 		return HttpResponseRedirect(reverse('social:home'))
 	else:
-		return HttpResponseBadRequest("check[1]")
+		return HttpResponseBadRequest(check[1])
 		
 def _check_post_request(request, keys):
 	#check if request method is POST
@@ -140,12 +168,7 @@ def get_json_playlist(request, playlist_id):
 	result['name'] = playlist.name
 	result['id'] = playlist.id
 	result['coverUrl'] = playlist.cover.url
-	result['savedBy'] = []
-	for user in playlist.savedBy.all():
-		user_obj = {}
-		user_obj['id'] = user.id
-		user_obj['name'] = user.username
-		
+	
 	result['songs'] = []
 	for song in playlist.songs.all():
 	  song_obj = {}

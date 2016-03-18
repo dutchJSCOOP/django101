@@ -4,13 +4,17 @@
     <title> Welcome to Social! </title>
     <link rel="stylesheet" href="{% static 'social/spotifyDemoCSS.css' %}"></link>
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic' rel='stylesheet' type='text/css'>
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js'></script>
+	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+	<link href="{% static 'social/jquery-ui.css' %}" rel='stylesheet' type='text/css'>
 
 	<script src="{% static 'social/html5slider.js' %}"></script>
  </head>
   
   
   <body>
+  
+  
 	<script>
 		var audio;
 		var playlist;
@@ -25,7 +29,7 @@
 			playlist = $('.playlistSongsFrame');
 			tracks = playlist.find(' a');
 			len = tracks.length;
-			audio[0].volume = .10;
+			audio[0].volume = 1;
 			playlist.find('a').click(function(e){
 				$('.playSongButton').removeClass('pauseHoverNear');
 				$('.playSongButton').addClass('playHoverNear');
@@ -54,12 +58,60 @@
 			});
 		}
 		
+		function run(link, player){
+				player.src = link.attr('href');
+				par = link.parent();
+				par.addClass('active').addClass('highLighted').siblings().removeClass('active').removeClass('highLighted');
+				audio[0].load();
+				play(link);
+		}
+		
+		
+		function initPlayerSearch(){   //loads up the music files for the music player to play.
+			
+			current = 0;
+			audio = $('#music');
+			playlist = $('.searchResultsContainer');
+			tracks = playlist.find(' a');
+			len = tracks.length;
+			audio[0].volume = 1;
+			playlist.find('a').click(function(e){
+				$('.searchPlay').removeClass('pauseHoverNear');
+				$('.searchPlay').addClass('playHoverNear');
+				e.preventDefault();
+				link = $(this);
+				if(link.parent().hasClass('active')){ //if the song is already loaded into the player, just pause.
+					play(link);
+				}else{
+					
+					current = link.parent().index()-1;
+					run(link, audio[0]);
+				
+				}
+				
+			});
+			
+			audio[0].addEventListener('ended',function(e){
+				current++;
+				if(current == len){
+					current = 0;
+					link = playlist.find('a')[0];
+				}else{
+					link = playlist.find('a')[current];    
+				}
+				run($(link),audio[0]);
+			});
+		}
+		
+		
+		
+		
 		function playPlaylist(playlist_id){
 			$.getJSON('/json/playlist/' + playlist_id + '/', function(data){
 				showPlaylist(data);
 				playlist = $('.playlistSongsFrame');
 				firstSong = playlist.find('a')[0]
-				$(firstSong).trigger('click');
+				$(firstSong).trigger('click'); //I know, there's probably a much better, faster and easier way to do this..
 			});
 			
 		
@@ -75,6 +127,7 @@
 					link = playlist.find('a')[current];    
 				}
 				run($(link),audio[0]);
+				
 		}
 		
 		function previous(){
@@ -86,14 +139,9 @@
 					link = playlist.find('a')[current];    
 				}
 				run($(link),audio[0]);
+				
 		}
-		function run(link, player){
-				player.src = link.attr('href');
-				par = link.parent();
-				par.addClass('active').addClass('highLighted').siblings().removeClass('active').removeClass('highLighted');
-				audio[0].load();
-				play(link);
-		}
+		
 		
 		
 		$(document).on("mouseenter", ".songBar", function(){
@@ -132,8 +180,12 @@
 			
 			
 			$(".playlistSongsFrame").append("<div class='playListFrameHeaderContainer>'<img id='playListCoverLarge'style='background-image: url("+ playlist.coverUrl + ");' /><span style='margin-left: 210px;'> PLAYLIST </span> <div style='margin-left: 210px;' class='playlistFrameTitle' >" + playlist.name+ "</div> </div>"+
-											"<div id='playlistTableTitle'> <span id='songTag'>Song </span><span id='artistTag'>Artist</span><span id='albumTag'>Album</span>"
-						
+											"<form action='{% url 'social:delete_playlist'    %}' method='post' id='delete-playlist'>"+
+											" {% csrf_token %}"+
+											" <input type='text' name='playlist_id' class='hidden' form='delete-playlist' value=' "+ playlist.id + "'></input><button class='deleteButton' type='submit'title='delete playlist' >Delete </button>"+
+											" </form>"+
+										"<div id='playlistTableTitle'> <span id='songTag'>Song </span><span id='artistTag'>Artist</span><span id='albumTag'>Album</span>" 
+										
 						
 			);
 			
@@ -172,7 +224,7 @@
 		$(document.body).on('mouseenter','.playlistLinkImage',function(){
 			$(this).find( ".playlistLinkImageOverlay" ).show();
 		}).on('mouseleave','.playlistLinkImage', function(){
-		$(this).find( ".playlistLinkImageOverlay" ).hide();
+			$(this).find( ".playlistLinkImageOverlay" ).hide();
 		});
 		
 		$(document.body).on('mouseenter','.playlistLinkImageOverlay >  img',function(){
@@ -205,32 +257,29 @@
 			$('.handle').animate({marginLeft: '-='+$animateDistance}, 500);
 		
 		});
+		
+		
+		
 		 
 	
 	</script>
 	
-    <div class="container">
-	
-	
+
 		
-		
-		<div class='sideMenu'>
-		
-		</div>
 		
 		<div class='contentContainerOuter'>
-			
 			<div class='contentContainerInner'>
-			
-			
+	
 				<div class='header'>
 					<h1> My Playlists</h1>
 				</div>
 				
 				<div id="playlistBrowser">
 					<div class='browseButtonContainer'>
+						
 						<img id='plBrowseLeft' src="{% static 'social/arrowLeftGray.png' %}"/>
 						<img id='plBrowseRight' src="{% static 'social/arrowRightWhite.png' %}"/>
+						<img onclick='showAddPlaylist()'id='addPlaylistButton' src="{% static 'social/addButton.png' %}"/>	
 					</div>
 					<div class="dragdealer" id='image-carousel'>
 						<div class="playlistLinkContainer handle" >
@@ -241,8 +290,8 @@
 								
 								<div width="180" height="180" class="playlistLinkImage" style="background-image: url( {{playlist.cover.url}} )">
 								<div width="180" height="180" class="playlistLinkImageOverlay"  ><img onclick="playPlaylist({{playlist.id}})"height='80px' width='80px' src="/media/playHoverNear.png"/></div></div> <!-- style="background-image: url( /media/hoverPlay.png )-->
-								<div class="playlistLinkTileName"> <a onclick="getPlaylist({{playlist.id}})">{{playlist.name}}</a></div>
-								<div class="playlistLinkTileOwner"> van {{playlist.owner.username}}</div>
+								<div class="playlistLinkTileName"> <a onclick="getPlaylist({{playlist.id}})"><span class='capitals'> {{playlist.name}}</span></a></div>
+								<div class="playlistLinkTileOwner"> van <span class='capitals'>{{playlist.owner.username}}</span></div>
 								
 							</div>
 						
@@ -251,7 +300,72 @@
 			
 					</div>
 				</div>
+				
+				<div class='addPlaylistContainer'>
+					
+					<form action="{% url 'social:add_playlist' %}" method="post" id='new-post-form' enctype='multipart/form-data'>
+					{% csrf_token %}
+						<div class='form-group' id='playlistCoverUpload'>
+							
+							<input style="visibility: hidden; position: absolute;" id='photo-upload' class='form-control' 
+								type='file' name='cover' accept='image/*'>
+							</input>
+							 <label for="photo-upload"> <span class="uploadCoverButton"><span id='uploadTag'>Add cover</span></span></label>
+						</div>
+						<div class='form-group'>
+							<textarea class='form-control'name='playlistName' form='new-post-form' required placeholder="New Playlist"></textarea> 
+						</div>
+						
+						<button type='submit' class='btn btn-default' onsubmit="hideAddPlaylist()" > Add Playlist</button>
+					</form>
+			</div>
+				
+			<script> //upload playlist coverscripting
 			
+			function showAddPlaylist(){
+				if(!$('.addPlaylistContainer').is(":visible")) {
+					$('.addPlaylistContainer').show();
+					$('#addPlaylistButton').attr("src",'/static/social/addButtonHover.png');
+				
+				}else{
+				   hideAddPlaylist();
+				}
+				
+				
+			}
+			function hideAddPlaylist(){
+				$('.addPlaylistContainer').hide();
+				$('#addPlaylistButton').attr("src",'/static/social/addButton.png');
+			}
+			
+			function readURL(input) {
+				if (input.files && input.files[0]) {
+				var reader = new FileReader();
+            
+				reader.onload = function (e) {
+					$('.uploadCoverButton').css('background-image', 'url('+e.target.result+')');
+					$('.uploadCoverButton').css('background-size', 'cover');
+					$('.uploadCoverButton').css('background-repeat', 'no-repeat');
+					$('#uploadTag').html(' ');
+				}
+            
+				reader.readAsDataURL(input.files[0]);
+				}
+			}
+    
+			$("#photo-upload").change(function(){
+				readURL(this);
+			});
+			
+			$(document.body).on('mouseenter','#addPlaylistButton',function(){
+				$(this).attr("src",'/static/social/addButtonHover.png');
+			}).on('mouseleave','#addPlaylistButton',function(){
+				if(!$('.addPlaylistContainer').is(":visible")) {
+					$(this).attr("src",'/static/social/addButton.png');
+				}
+			});
+			
+			</script>
 				
 				<div class="playlistSongsFrame">
 				
@@ -259,16 +373,7 @@
 				</div>
 			
 			</div>
-			<!--
-			<audio id='audio' tabindex="0" controls="" type="audio/mpeg">
-			<source type="audio/mp3" src="http://www.archive.org/download/bolero_69/Bolero.mp3">
-			Sorry, your browser does not support HTML5 audio.
-			</audio>
-			
-			
-			<!--"background-image:url({% static 'social/tiger.JPG' %})" -->
-			 
-			
+		
 			
 			
 			
@@ -276,7 +381,113 @@
 		
     </div>
 	
-	<audio tabindex="0" preload="auto"id="music" preload="true" type="audio/mpeg">
+	<div id='grayOut' onclick='showHideSearch()'></div>		
+			
+			
+	<div class='sideMenu'>
+			
+			<div id='logoContainer'></div>
+			<div id='searchButtonContainer' onclick='showHideSearch()'></div>
+			
+			
+			<div id='searchContainer'>
+				<div id='searchBarContainer'>
+					<form action="{% url 'social:stream' %}" method="post" id='search-bar'>
+						{% csrf_token %}
+						<div class='form-group'>
+							<input type='text' class='form-control' name='search_terms' required placeholder='Search...'>
+						</div>
+						<button type='submit' class='btn btn-primary'></button>
+					</form>
+				</div>
+				
+				<div class='searchResultsContainer'>
+					<span> RESULTS </span>
+					{% if songResults %}
+						
+						{% for song in songResults %}
+						
+							<div class='songResultBar'>
+								
+								<div class='songNameS' >{{song.name}}  </div>
+								<div class='songArtistS'>{{song.album.name}}, by {{song.artist.name }}</div>
+								<a class='searchPlay' href=' {{song.audioFile.url}} '></a>
+								<div class='searchAdd' onclick='showHidePlaylistList($(this))'></div>
+								
+								<div class='playlistList {{song.id}}' >
+										<span class='playlistListTitle'> ADD TO... </span>
+										
+									
+									<ul class='playlistListContent'>
+										
+									{% for playlist in userPlaylists%}
+										<form action="{% url 'social:add_song_to_playlist'%}" method="post" id='addToPlaylistForm+{{song.id}}+{{playlist.id}}'>	
+										{% csrf_token %}
+											<label for='{{playlist.id}}+{{song.id}} ' ><li  class='playlistListBar {{playlist.id}}' > {{playlist.name}} </li></label>
+											<input form='addToPlaylistForm+{{song.id}}+{{playlist.id}}' type='text' class='hidden' name='playlistID' value='{{playlist.id}}'></input>
+											<input form='addToPlaylistForm+{{song.id}}+{{playlist.id}}' type='text' class='hidden' name='songID' value='{{song.id}}'></input>
+											
+											<button type='submit' class='hidden' id='{{playlist.id}}+{{song.id}} ' ></button>
+										</form>
+									{% endfor%}
+									<ul>
+									
+								</div>
+							</div>
+						
+						{% endfor %}
+						
+					{% else %}
+					
+					<span id='empty'>No results found</span>
+					
+					{% endif %}
+					
+				</div>
+				
+				
+				
+				
+			</div>
+		
+	<script> //Searchbar scripting
+		function showHidePlaylistList(object){
+			$('.playlistList').hide();
+			
+			var parent = object.parent()
+			var thisList = parent.find( ".playlistList" );
+			if(thisList.is(":visible")) {
+				thisList.hide();
+			}else{
+				thisList.show();
+			}
+		
+		}
+	
+		
+		function showHideSearch(){
+			if($('#searchContainer').is(":visible")) {
+				$('#searchContainer').hide("slide", 400);
+				$('#grayOut').hide("fade" ,200);
+				$('.playlistList').hide();
+			}else{
+				initPlayerSearch();
+				$('#searchContainer').show("slide", 400);
+				$('#grayOut').show("fade" ,200);
+			}
+		
+		}
+		
+		$('#search-bar input').keydown(function(e) {
+			if (e.keyCode == 13) {
+				$('#search-bar').submit();
+			}
+		});
+		
+	</script>
+	
+			
+		<audio tabindex="0" preload="auto"id="music" preload="true" type="audio/mpeg">
 			<source type="audio/mp3" src="http://www.alexkatz.me/codepen/music/interlude.mp3">
 			Sorry, your browser does not support HTML5 audio.
 			</audio>
@@ -289,8 +500,11 @@
 					<div id="playhead"></div>
 				</div>
 				<span class='totalTimeIndicator'>s</span>
+				<div id='audioSliderTrigger'></div>
+				<div id='audioSliderContainer'><div id="audioSlider"></div></div> 
 			</div>
-
+		
+		
 		
 		<script> // player script
 				
@@ -357,8 +571,7 @@
 							playhead.style.marginLeft = timelineWidth + "px";
 						}
 					}
-					//(m < 10 ? '0'+m : m)
-					// timeUpdate 
+					
 					// Synchronizes playhead position with current point in audio 
 					function timeUpdate() {
 						var playPercent = timelineWidth * (music.currentTime / duration);
@@ -403,9 +616,20 @@
 						duration = music.duration;  
 					}, false);
 
-			
+					$('#audioSlider').slider({
+						orientation: "horizontal",
+						value: music.volume,
+						min: 0,
+						max: 1,
+						range: 'min',
+						animate: true,
+						step: .1,
+						slide: function(e, ui) {
+							music.volume = ui.value;
+						}
+					});
 
-
+					
 				
 				
 				

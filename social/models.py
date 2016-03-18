@@ -69,10 +69,11 @@ class Song(models.Model):
 class Playlist(models.Model):
 	name = models.CharField(max_length = 50)
 	owner = models.ForeignKey('auth.User')
-	savedBy = models.ManyToManyField(User, related_name='savedBy')
-	songs = models.ManyToManyField(Song)
-	lastPlayed = models.DateTimeField(auto_now = True)
+	songs = models.ManyToManyField(Song, blank= True, null = True)
+	timeAdded = models.DateTimeField(auto_now = True)
 	cover  = models.ImageField(default='/media/1.jpg')
+	class Meta:
+		ordering = ['-timeAdded']
 	def __str__(self):
 		return self.name	
 	
