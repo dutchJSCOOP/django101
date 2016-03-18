@@ -154,16 +154,16 @@
 		
 		$(document).on("mouseenter", ".playSongButton", function(){
 				if($(this).parent().hasClass('active')){
-					//$(this).css("background-image", "url('/media/pauseHoverOn.png')");
+					//$(this).css("background-image", "url('/static/social/pauseHoverOn.png')");
 				}else{
-					//$(this).css("background-image", "url('/media/playHoverOn.png')");
+					//$(this).css("background-image", "url('/static/social/playHoverOn.png')");
 				}
 				
 		}).on("mouseleave", ".playSongButton", function(){
 			if($(this).parent().hasClass('active')){
-					//$(this).css("background-image", "url('/media/pauseHoverNear.png')");
+					//$(this).css("background-image", "url('/static/social/pauseHoverNear.png')");
 				}else{
-					//$(this).css("background-image", "url('/media/playHoverNear.png')");
+					//$(this).css("background-image", "url('/static/social/playHoverNear.png')");
 				}
 		});
 		
@@ -228,9 +228,9 @@
 		});
 		
 		$(document.body).on('mouseenter','.playlistLinkImageOverlay >  img',function(){
-			$(this).attr("src",'/media/playHoverOn.png');
+			$(this).attr("src",'/static/social/playHoverOn.png');
 		}).on('mouseleave','.playlistLinkImageOverlay >  img',function(){
-			$(this).attr("src",'/media/playHoverNear.png');
+			$(this).attr("src",'/static/social/playHoverNear.png');
 		});
 		
 		
@@ -289,7 +289,7 @@
 								
 								
 								<div width="180" height="180" class="playlistLinkImage" style="background-image: url( {{playlist.cover.url}} )">
-								<div width="180" height="180" class="playlistLinkImageOverlay"  ><img onclick="playPlaylist({{playlist.id}})"height='80px' width='80px' src="/media/playHoverNear.png"/></div></div> <!-- style="background-image: url( /media/hoverPlay.png )-->
+								<div width="180" height="180" class="playlistLinkImageOverlay"  ><img onclick="playPlaylist({{playlist.id}})"height='80px' width='80px' src="/static/social/playHoverNear.png"/></div></div> 
 								<div class="playlistLinkTileName"> <a onclick="getPlaylist({{playlist.id}})"><span class='capitals'> {{playlist.name}}</span></a></div>
 								<div class="playlistLinkTileOwner"> van <span class='capitals'>{{playlist.owner.username}}</span></div>
 								
