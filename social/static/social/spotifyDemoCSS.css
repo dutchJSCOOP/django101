@@ -297,12 +297,20 @@ button.btn.btn-primary {
     font-weight: lighter;
     font-size: 15px;
     border-bottom: 1px solid;
-    
     width: 230px;
     display: inline-block;
 }
-
-
+.searchResultsContainer {
+    overflow-y: auto;
+    height: 815px;
+    padding-bottom: 65px;
+}
+div#currentPlayingSong {
+    display: inline-block;
+    color: white;
+    vertical-align: middle;
+    margin-left: 40px;
+}
 .playlistList{ 
     width: 200px;
     height: 300px;

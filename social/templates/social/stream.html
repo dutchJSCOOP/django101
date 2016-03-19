@@ -59,6 +59,11 @@
 		}
 		
 		function run(link, player){
+				var songProperties = link.attr('id').split(',');
+				var songName = songProperties[1];
+				var songArtist = songProperties[2];
+				
+				$("#currentPlayingSong").html("Now Playing:</br> <b>" + songName + "</b> by " + songArtist);
 				player.src = link.attr('href');
 				par = link.parent();
 				par.addClass('active').addClass('highLighted').siblings().removeClass('active').removeClass('highLighted');
@@ -191,7 +196,7 @@
 			
 			playlist.songs.forEach(function(song){
 				let node = "<div class='songBar' id='" + playlist.id + "'>" + 
-						"<a class='playSongButton playHoverNear' href=' "+ song.url + " '></a>" +
+						"<a id='playlist,"+song.name+","+song.artist.name+"' class='playSongButton playHoverNear' href=' "+ song.url + " '></a>" +
 						"<div class='songName' ><span class='songAtrributes'>" + song.name + "</span></div>" +
 						"<div class='songArtist'><span class='songAtrributes'>" + song.artist.name + "</span></div>" +
 						"<div class='songAlbum'><span class='songAtrributes'>" + song.album.name + "</span></div>" +
@@ -411,7 +416,7 @@
 								
 								<div class='songNameS' >{{song.name}}  </div>
 								<div class='songArtistS'>{{song.album.name}}, by {{song.artist.name }}</div>
-								<a class='searchPlay' href=' {{song.audioFile.url}} '></a>
+								<a class='searchPlay' id='search,{{ song.name}},{{song.artist.name}}' href=' {{song.audioFile.url}} '></a>
 								<div class='searchAdd' onclick='showHidePlaylistList($(this))'></div>
 								
 								<div class='playlistList {{song.id}}' >
@@ -502,6 +507,7 @@
 				<span class='totalTimeIndicator'>s</span>
 				<div id='audioSliderTrigger'></div>
 				<div id='audioSliderContainer'><div id="audioSlider"></div></div> 
+				<div id='currentPlayingSong'> </div>
 			</div>
 		
 		
@@ -591,6 +597,7 @@
 
 					//Play and Pause
 					function play(songBarIcon) {
+						
 						showPlayer();
 						// start music
 						if (music.paused) {
