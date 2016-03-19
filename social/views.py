@@ -34,7 +34,7 @@ def stream(request):
 	if request.method == 'GET':
 		userPlaylists = Playlist.objects.filter(owner=request.user).order_by('-timeAdded')
 		user = UserProfile.objects.filter(user=request.user)
-		songResults = Song.objects.all()
+		songResults = []
 	elif request.method == 'POST':
 		check = _check_post_request(request, ['search_terms'])
 		if check[0]:
