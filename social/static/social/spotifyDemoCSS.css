@@ -530,15 +530,16 @@ button.btn.btn-primary {
 		border: none;
 		padding: 0px;
 }
-#songTag{margin-left: 100px; font-weight: bold;}
-#artistTag{margin-left: 183px;font-weight: bold;}
-#albumTag{margin-left: 210px;font-weight: bold;}
+#songTag{margin-left: 100px; font-weight: bold; position: absolute;}
+#artistTag{margin-left: 400px;font-weight: bold;position: absolute;}
+#albumTag{margin-left: 700px;font-weight: bold;position: absolute;}
 
 	
 .songName, .songArtist, .songAlbum{
 	
-	
+	position: absolute;
 	color: white;
+	
 }
 
 #image-carousel{
@@ -578,8 +579,8 @@ button.btn.btn-primary {
 
 
 .songName{height: 40px; margin-left: 50px; display: inline-block;}
-.songArtist{height: 40px;margin-left: 200px; display: inline-block;}
-.songAlbum{height: 40px; margin-left: 200px; display: inline-block;}
+.songArtist{height: 40px;margin-left: 350px; display: inline-block; }
+.songAlbum{height: 40px; margin-left: 650px; display: inline-block;}
 .songAtributes{margin-top: auto; margin-bottom: auto; height: 10px;display: inline-block; vertical-align: middle;}
 
 
